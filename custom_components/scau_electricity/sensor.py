@@ -54,7 +54,7 @@ SENSORS = (
         translation_key="balance",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="CNY",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
         value_fn=lambda data: data.balance_yuan,
     ),
