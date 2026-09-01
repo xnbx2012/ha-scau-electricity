@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .api import ElectricityData, ScauApiError, ScauElectricityApi
-from .const import DEFAULT_SCAN_INTERVAL_MINUTES, DOMAIN
+from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,11 @@ class ScauElectricityCoordinator(DataUpdateCoordinator[ElectricityData]):
             hass,
             logger=_LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=DEFAULT_SCAN_INTERVAL_MINUTES),
+            update_interval=timedelta(
+                minutes=entry.data.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES
+                )
+            ),
             config_entry=entry,
         )
         self.api = api

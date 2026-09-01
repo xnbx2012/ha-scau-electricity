@@ -11,7 +11,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
 from .api import ScauApiConnectionError, ScauApiError, ScauElectricityApi
-from .const import CONF_ROOM_ID, CONF_ROOM_NAME, DOMAIN
+from .const import (
+    CONF_ROOM_ID,
+    CONF_ROOM_NAME,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+    DOMAIN,
+)
 
 
 class ScauElectricityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -27,6 +33,7 @@ class ScauElectricityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             room_id = str(user_input[CONF_ROOM_ID]).strip()
             room_name = str(user_input[CONF_ROOM_NAME]).strip()
+            scan_interval = int(user_input[CONF_SCAN_INTERVAL])
             await self.async_set_unique_id(room_id)
             self._abort_if_unique_id_configured()
             api = ScauElectricityApi(
@@ -41,7 +48,11 @@ class ScauElectricityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=room_name,
-                    data={CONF_ROOM_ID: room_id, CONF_ROOM_NAME: room_name},
+                    data={
+                        CONF_ROOM_ID: room_id,
+                        CONF_ROOM_NAME: room_name,
+                        CONF_SCAN_INTERVAL: scan_interval,
+                    },
                 )
         values = user_input or {}
         schema = vol.Schema(
@@ -50,6 +61,12 @@ class ScauElectricityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_ROOM_NAME, default=values.get(CONF_ROOM_NAME, "")
                 ): str,
                 vol.Required(CONF_ROOM_ID, default=values.get(CONF_ROOM_ID, "")): str,
+                vol.Required(
+                    CONF_SCAN_INTERVAL,
+                    default=values.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1)),
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

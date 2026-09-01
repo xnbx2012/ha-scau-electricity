@@ -11,7 +11,7 @@
 - 电表设立以来的累计用电量（kWh）
 - 当前余额（元）；实体属性包含余额刷新时间和在线状态
 
-集成每 5 分钟更新一次。登录 token、timestamp 和 sign 均在内存中动态生成，无需保存账号或 Cookie。
+添加集成时可以设置轮询间隔，默认每 60 分钟更新一次。登录 token、timestamp 和 sign 均在内存中动态生成，无需保存账号或 Cookie。
 
 > 学校接口仅提供 HTTP。房间信息会发送到 `http://cz.scau.edu.cn`，请仅在可信网络环境中使用。
 
@@ -21,7 +21,7 @@
 2. 将本仓库整个 `custom_components/scau_electricity` 目录复制到 Home Assistant，最终路径为 `/config/custom_components/scau_electricity`。
 3. 完整重启 Home Assistant；仅重新加载 YAML 无法加载新的 Python 集成。
 4. 打开 **设置 → 设备与服务 → 添加集成**，搜索“华南农业大学电费”。
-5. 输入房间名称与房间 ID。测试数据如下：
+5. 输入房间名称、房间 ID 与轮询间隔（分钟，默认为 60）。测试数据如下：
 
    - 房间名称：`泰山2#301`
    - 房间 ID：`121931`
