@@ -20,7 +20,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .api import ElectricityData
-from .const import CONF_ROOM_ID, CONF_ROOM_NAME, DOMAIN
+from .const import (
+    CONF_ROOM_ID,
+    CONF_ROOM_NAME,
+    DOMAIN,
+    ELECTRICITY_PRICE_YUAN_PER_KWH,
+)
 from .coordinator import ScauElectricityCoordinator
 
 
@@ -58,6 +63,15 @@ SENSORS = (
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
         value_fn=lambda data: data.balance_yuan,
+    ),
+    ScauSensorDescription(
+        key="daily_cost",
+        translation_key="daily_cost",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="CNY",
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
+        value_fn=lambda data: data.daily_energy * ELECTRICITY_PRICE_YUAN_PER_KWH,
     ),
 )
 

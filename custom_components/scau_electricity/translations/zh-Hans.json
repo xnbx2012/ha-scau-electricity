@@ -13,6 +13,7 @@
   },
   "entity": {"sensor": {
     "balance": {"name": "余额"},
+    "daily_cost": {"name": "今日电费"},
     "daily_energy": {"name": "今日用电量"},
     "total_energy": {"name": "累计用电量"}
   }}

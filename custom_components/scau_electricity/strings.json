@@ -13,6 +13,7 @@
   },
   "entity": {"sensor": {
     "balance": {"name": "Balance"},
+    "daily_cost": {"name": "Today's electricity cost"},
     "daily_energy": {"name": "Today's energy"},
     "total_energy": {"name": "Total energy"}
   }}

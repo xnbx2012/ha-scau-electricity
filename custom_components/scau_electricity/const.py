@@ -9,3 +9,4 @@ CONF_ROOM_NAME: Final = "room_name"
 DEFAULT_BASE_URL: Final = "http://cz.scau.edu.cn"
 DEFAULT_DB_ID: Final = 9853
 DEFAULT_SCAN_INTERVAL_MINUTES: Final = 5
+ELECTRICITY_PRICE_YUAN_PER_KWH: Final = 0.63
