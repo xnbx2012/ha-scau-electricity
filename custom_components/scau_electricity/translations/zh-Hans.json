@@ -1,0 +1,19 @@
+{
+  "config": {
+    "abort": {"already_configured": "该房间已配置。"},
+    "error": {
+      "cannot_connect": "无法连接华南农业大学电费服务。",
+      "invalid_room": "房间信息无效或服务未返回读数。"
+    },
+    "step": {"user": {
+      "data": {"room_id": "房间 ID", "room_name": "房间名称"},
+      "description": "请输入华南农业大学电费服务使用的房间信息。",
+      "title": "添加宿舍电表"
+    }}
+  },
+  "entity": {"sensor": {
+    "balance": {"name": "余额"},
+    "daily_energy": {"name": "今日用电量"},
+    "total_energy": {"name": "累计用电量"}
+  }}
+}

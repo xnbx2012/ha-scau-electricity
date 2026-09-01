@@ -1,0 +1,19 @@
+{
+  "config": {
+    "abort": {"already_configured": "This room is already configured."},
+    "error": {
+      "cannot_connect": "Failed to connect to the SCAU electricity service.",
+      "invalid_room": "The room information is invalid or no readings were returned."
+    },
+    "step": {"user": {
+      "data": {"room_id": "Room ID", "room_name": "Room name"},
+      "description": "Enter the room information used by the SCAU electricity service.",
+      "title": "Add an electricity meter"
+    }}
+  },
+  "entity": {"sensor": {
+    "balance": {"name": "Balance"},
+    "daily_energy": {"name": "Today's energy"},
+    "total_energy": {"name": "Total energy"}
+  }}
+}

@@ -1,0 +1,11 @@
+{
+  "codeowners": ["@xnbx2012"],
+  "config_flow": true,
+  "documentation": "https://github.com/xnbx2012/ha-scau-electricity",
+  "domain": "scau_electricity",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/xnbx2012/ha-scau-electricity/issues",
+  "name": "华南农业大学电费",
+  "requirements": [],
+  "version": "0.1.0"
+}

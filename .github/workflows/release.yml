@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create GitHub release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Verify tag matches integration version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          manifest_version="$(python -c 'import json; print(json.load(open("custom_components/scau_electricity/manifest.json", encoding="utf-8"))["version"])')"
+          if [ "${RELEASE_TAG#v}" != "$manifest_version" ]; then
+            echo "Tag $RELEASE_TAG does not match manifest version $manifest_version" >&2
+            exit 1
+          fi
+
+      - name: Build integration archive
+        run: |
+          cd custom_components
+          zip -r ../scau_electricity.zip scau_electricity
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            scau_electricity.zip \
+            --generate-notes \
+            --title "${{ github.ref_name }}"
