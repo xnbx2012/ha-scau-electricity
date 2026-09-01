@@ -1,47 +1,49 @@
-# 华南农业大学电费 Home Assistant 集成
+# SCAU Electricity for Home Assistant
 
-通过学校旧版电费接口读取宿舍电表数据的 Home Assistant 自定义集成，能够读取用电量和电费余额数据，目前按照学校公布的0.63元/kwh进行电费计算，余额和用电量是接口中直接读出的数据。
+[English](README.md) | [简体中文](README_zh-CN.md)
 
-## 功能
+A Home Assistant custom integration that reads South China Agricultural University dormitory electricity meter data through the university's legacy API. It provides electricity usage and account balance readings, and estimates the daily electricity cost using the university rate of CNY 0.63/kWh.
 
-每个房间会创建一个设备和四个传感器：
+## Features
 
-- 今日用电量（kWh）
-- 今日电费（元），按照“今日用电量 × 0.63 元/kWh”计算
-- 电表设立以来的累计用电量（kWh）
-- 当前余额（元）；实体属性包含余额刷新时间和在线状态
+Each configured room creates one device with four sensors:
 
-添加集成时可以设置轮询间隔，默认每 60 分钟更新一次。登录 token、timestamp 和 sign 均在内存中动态生成，无需保存账号或 Cookie。
+- Today's energy usage (kWh)
+- Today's electricity cost (CNY), calculated as `today's energy × CNY 0.63/kWh`
+- Total energy usage since the meter was installed (kWh)
+- Current account balance (CNY), with the balance refresh time and meter online status exposed as attributes
 
-![HA显示效果](image-1.png)
+The polling interval is configurable during setup and defaults to 60 minutes. Login tokens, timestamps, and request signatures are generated in memory; no account credentials or cookies need to be stored in Home Assistant.
 
-> 学校接口仅提供 HTTP。房间信息会发送到 `http://cz.scau.edu.cn`以获取相应数据。
+![Home Assistant entities](image-1.png)
 
-## 安装步骤
+> The university service is only available over HTTP. Room information is sent to `http://cz.scau.edu.cn` to retrieve the meter data.
 
-### 手动安装
+## Installation
 
-1. 找到 Home Assistant 配置目录（与 `configuration.yaml` 同级，通常为 `/config`）。
-2. 将本仓库整个 `custom_components/scau_electricity` 目录复制到 Home Assistant，最终路径为 `/config/custom_components/scau_electricity`。
-3. 完整重启 Home Assistant；仅重新加载 YAML 无法加载新的 Python 集成。
-4. 打开 **设置 → 设备与服务 → 添加集成**，搜索“华南农业大学电费”。
-5. 输入房间名称、房间 ID 与轮询间隔（分钟，默认为 60）。对应于下面图中显示的这两项数据：
+### Manual installation
 
-   - 房间名称：`泰山2#301`
-   - 房间 ID：`121931`
+1. Locate the Home Assistant configuration directory containing `configuration.yaml` (usually `/config`).
+2. Copy the complete `custom_components/scau_electricity` directory from this repository to `/config/custom_components/scau_electricity`.
+3. Fully restart Home Assistant. Reloading YAML alone does not load a new Python integration.
+4. Open **Settings → Devices & services → Add integration** and search for **SCAU Electricity** or **华南农业大学电费**.
+5. Enter the room name, room ID, and polling interval in minutes (default: 60). The room fields correspond to the two highlighted values below:
 
-![](image.png)
+   - Room name: `泰山2#301`
+   - Room ID: `121931`
 
-提交时会立即连接服务并验证房间。若失败，请确认 Home Assistant 主机能访问 `http://cz.scau.edu.cn`，并查看日志中的 `custom_components.scau_electricity`。
+![Room name and room ID](image.png)
 
-### 更新与卸载
+The integration validates the room by connecting to the service when the form is submitted. If validation fails, confirm that the Home Assistant host can access `http://cz.scau.edu.cn` and inspect logs from `custom_components.scau_electricity`.
 
-手动更新时覆盖 `/config/custom_components/scau_electricity` 后重启。卸载时先在“设备与服务”删除配置条目，再删除组件目录并重启。
+### Updating and uninstalling
 
-### HACS安装
+For a manual update, replace `/config/custom_components/scau_electricity` with the new version and restart Home Assistant. To uninstall, remove the integration entry under **Devices & services**, delete the component directory, and restart Home Assistant.
 
-暂未上架
+### HACS
 
-## 许可证
+This integration is not yet listed in the default HACS repository.
 
-本项目采用 [MIT License](LICENSE)。
+## License
+
+This project is licensed under the [MIT License](LICENSE).
