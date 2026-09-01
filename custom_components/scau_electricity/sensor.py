@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .api import ElectricityData
 from .const import CONF_ROOM_ID, CONF_ROOM_NAME, DOMAIN
@@ -91,6 +92,9 @@ class ScauElectricitySensor(
         self.entity_description = description
         room_id = entry.data[CONF_ROOM_ID]
         self._attr_unique_id = f"{room_id}_{description.key}"
+        self.entity_id = (
+            f"sensor.scau_{slugify(entry.data[CONF_ROOM_NAME])}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, room_id)},
             name=entry.data[CONF_ROOM_NAME],
