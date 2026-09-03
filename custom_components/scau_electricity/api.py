@@ -5,12 +5,13 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
+from asyncio import sleep
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 from urllib.parse import parse_qsl, unquote
 
-from aiohttp import ClientError, ClientSession, ClientTimeout
+from aiohttp import ClientError, ClientResponseError, ClientSession, ClientTimeout
 
 from .const import DEFAULT_BASE_URL, DEFAULT_DB_ID
 
@@ -86,7 +87,10 @@ class ScauElectricityApi:
         usage_request = {
             "roomid": self._room_id,
             "roomname": self._room_name,
-            "starttime": day,
+            # The endpoint returns no cumulative reading when the current day
+            # has no detail row. Query its maximum 31-day window so the latest
+            # historical row can provide the cumulative value.
+            "starttime": (reading_date - timedelta(days=30)).isoformat(),
             "endtime": day,
         }
         balance_request = {"roomid": self._room_id, "roomname": self._room_name}
@@ -100,18 +104,57 @@ class ScauElectricityApi:
         )
         usage_data = self._mapping(usage.get("data"), "data")
         rows = usage_data.get("rows")
-        if not isinstance(rows, list) or not rows:
-            raise ScauApiResponseError("用电量响应中没有 rows 数据")
-        row = self._mapping(rows[0], "data.rows[0]")
+        if isinstance(rows, list) and rows:
+            row_data = [
+                self._mapping(row, f"data.rows[{index}]")
+                for index, row in enumerate(rows)
+            ]
+            today_row = next(
+                (row for row in row_data if row.get("date") == day), None
+            )
+            latest_row = max(
+                row_data,
+                key=lambda row: str(row.get("date", "")),
+            )
+            daily_energy = (
+                self._number(today_row.get("ryl"), "ryl")
+                if today_row is not None
+                else 0.0
+            )
+            total_energy = self._number(latest_row.get("totryl"), "totryl")
+        elif not rows:
+            # The service returns no detail row for a day with no usage, but
+            # still returns the cumulative reading at data.totryl.
+            daily_energy = 0.0
+            total_energy = self._number(usage_data.get("totryl"), "data.totryl")
+        else:
+            raise ScauApiResponseError("响应字段 data.rows 格式无效")
         balance_data = self._mapping(balance.get("data"), "data")
         return ElectricityData(
-            daily_energy=self._number(row.get("ryl"), "ryl"),
-            total_energy=self._number(row.get("totryl"), "totryl"),
+            daily_energy=daily_energy,
+            total_energy=total_energy,
             balance_yuan=self._number(balance_data.get("dbye"), "dbye") / 100,
             balance_updated_at=self._string(balance_data.get("cbtime")),
             online=self._bool(balance_data.get("online")),
             reading_date=reading_date,
         )
+
+    async def async_get_data_with_retries(
+        self,
+        reading_date: date,
+        *,
+        retry_attempts: int = 0,
+        retry_delay: float = 0,
+    ) -> ElectricityData:
+        """Fetch readings, retrying failed requests before giving up."""
+        for attempt in range(retry_attempts + 1):
+            try:
+                return await self.async_get_data(reading_date)
+            except ScauApiError:
+                if attempt >= retry_attempts:
+                    raise
+                await sleep(retry_delay)
+        raise AssertionError("retry loop did not return or raise")
 
     async def _async_login(self) -> ScauSession:
         try:
@@ -130,8 +173,12 @@ class ScauElectricityApi:
                     for redirect in reversed(response.history):
                         if cookie := redirect.cookies.get(COOKIE_NAME):
                             break
+        except ClientResponseError as err:
+            raise ScauApiConnectionError(
+                f"登录请求 HTTP {err.status}: {err.message or '无响应信息'}"
+            ) from err
         except (ClientError, TimeoutError) as err:
-            raise ScauApiConnectionError("无法连接华南农业大学电费服务") from err
+            raise ScauApiConnectionError(f"无法连接华南农业大学电费服务: {err}") from err
         if cookie is None:
             raise ScauApiResponseError(f"登录响应缺少 {COOKIE_NAME} Cookie")
         fields = dict(parse_qsl(unquote(cookie.value), keep_blank_values=True))
@@ -174,17 +221,22 @@ class ScauElectricityApi:
             ) as response:
                 raw = await response.read()
                 response.raise_for_status()
+        except ClientResponseError as err:
+            raise ScauApiConnectionError(
+                f"读取数据 HTTP {err.status}: {err.message or '无响应信息'}"
+            ) from err
         except (ClientError, TimeoutError) as err:
-            raise ScauApiConnectionError("读取华南农业大学电费数据失败") from err
+            raise ScauApiConnectionError(f"读取华南农业大学电费数据失败: {err}") from err
         try:
             result = json.loads(self._decode(raw))
         except json.JSONDecodeError as err:
             raise ScauApiResponseError("服务返回了无效 JSON") from err
         if not isinstance(result, dict):
             raise ScauApiResponseError("服务响应不是 JSON 对象")
-        if result.get("code") != 0:
+        if result.get("code") not in (0, "0"):
             raise ScauApiResponseError(
-                f"服务返回错误: {result.get('msg') or '未知错误'}"
+                f"服务返回错误 code={result.get('code')}: "
+                f"{result.get('msg') or '未知错误'}"
             )
         return result
 
@@ -197,6 +249,11 @@ class ScauElectricityApi:
 
     @staticmethod
     def _mapping(value: object, field: str) -> dict[str, Any]:
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except json.JSONDecodeError as err:
+                raise ScauApiResponseError(f"响应字段 {field} 格式无效") from err
         if not isinstance(value, dict):
             raise ScauApiResponseError(f"响应字段 {field} 格式无效")
         return value
@@ -207,7 +264,7 @@ class ScauElectricityApi:
             raise ScauApiResponseError(f"响应字段 {field} 不是数值")
         try:
             return float(value)
-        except ValueError as err:
+        except (TypeError, ValueError) as err:
             raise ScauApiResponseError(f"响应字段 {field} 不是数值") from err
 
     @staticmethod

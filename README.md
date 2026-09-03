@@ -13,7 +13,7 @@ Each configured room creates one device with four sensors:
 - Total energy usage since the meter was installed (kWh)
 - Current account balance (CNY), with the balance refresh time and meter online status exposed as attributes
 
-The polling interval is configurable during setup and defaults to 60 minutes. Login tokens, timestamps, and request signatures are generated in memory; no account credentials or cookies need to be stored in Home Assistant.
+The polling interval is configurable during setup and defaults to 60 minutes. Failed polls can also be retried with configurable attempts and delay (defaults: 5 attempts and 10 seconds). Login tokens, timestamps, and request signatures are generated in memory; no account credentials or cookies need to be stored in Home Assistant.
 
 ![Home Assistant entities](image-1.png)
 
@@ -27,7 +27,7 @@ The polling interval is configurable during setup and defaults to 60 minutes. Lo
 2. Copy the complete `custom_components/scau_electricity` directory from this repository to `/config/custom_components/scau_electricity`.
 3. Fully restart Home Assistant. Reloading YAML alone does not load a new Python integration.
 4. Open **Settings → Devices & services → Add integration** and search for **SCAU Electricity** or **华南农业大学电费**.
-5. Enter the room name, room ID, and polling interval in minutes (default: 60). The room fields correspond to the two highlighted values below:
+5. Enter the room name, room ID, polling interval in minutes (default: 60), retry attempts (default: 5), and retry delay in seconds (default: 10). The room fields correspond to the two highlighted values below:
 
    - Room name: `泰山2#301`
    - Room ID: `121931`
@@ -43,6 +43,12 @@ For a manual update, replace `/config/custom_components/scau_electricity` with t
 ### HACS
 
 This integration is not yet listed in the default HACS repository.
+
+## MCP server
+
+This repository also contains an independent stdio MCP server for reading the
+same meter data. See the [MCP setup guide](mcp/README.md) for uv installation,
+client configuration, available tools, and the planned `uvx` entry point.
 
 ## License
 

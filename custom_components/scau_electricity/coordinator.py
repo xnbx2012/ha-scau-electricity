@@ -11,7 +11,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .api import ElectricityData, ScauApiError, ScauElectricityApi
-from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES, DOMAIN
+from .const import (
+    CONF_RETRY_ATTEMPTS,
+    CONF_RETRY_DELAY,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_RETRY_ATTEMPTS,
+    DEFAULT_RETRY_DELAY_SECONDS,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +45,14 @@ class ScauElectricityCoordinator(DataUpdateCoordinator[ElectricityData]):
 
     async def _async_update_data(self) -> ElectricityData:
         try:
-            return await self.api.async_get_data(dt_util.now().date())
+            return await self.api.async_get_data_with_retries(
+                dt_util.now().date(),
+                retry_attempts=self.config_entry.data.get(
+                    CONF_RETRY_ATTEMPTS, DEFAULT_RETRY_ATTEMPTS
+                ),
+                retry_delay=self.config_entry.data.get(
+                    CONF_RETRY_DELAY, DEFAULT_RETRY_DELAY_SECONDS
+                ),
+            )
         except ScauApiError as err:
             raise UpdateFailed(str(err)) from err
