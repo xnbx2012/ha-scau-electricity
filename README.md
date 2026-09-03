@@ -2,18 +2,18 @@
 
 [English](README.md) | [简体中文](README_zh-CN.md)
 
-A Home Assistant custom integration that reads South China Agricultural University dormitory electricity meter data through the university's legacy API. It provides electricity usage and account balance readings, and estimates the daily electricity cost using the university rate of CNY 0.63/kWh.
+A Home Assistant custom integration that reads South China Agricultural University dormitory electricity meter data through the university's legacy API. It provides electricity usage and account balance readings, and estimates the daily electricity cost using the default university rate of CNY 0.6259/kWh.
 
 ## Features
 
 Each configured room creates one device with four sensors:
 
 - Today's energy usage (kWh)
-- Today's electricity cost (CNY), calculated as `today's energy × CNY 0.63/kWh`
+- Today's electricity cost (CNY), calculated as `today's energy × CNY 0.6259/kWh`
 - Total energy usage since the meter was installed (kWh)
 - Current account balance (CNY), with the balance refresh time and meter online status exposed as attributes
 
-The polling interval is configurable during setup and defaults to 60 minutes. Failed polls can also be retried with configurable attempts and delay (defaults: 5 attempts and 10 seconds). Login tokens, timestamps, and request signatures are generated in memory; no account credentials or cookies need to be stored in Home Assistant.
+The polling interval is configurable during setup and defaults to 60 minutes. Failed polls can also be retried with configurable attempts and delay (defaults: 5 attempts and 10 seconds). The electricity price defaults to 0.6259 CNY/kWh and can be customized during setup. Before the meter refreshes at 14:00, a zero current-day reading falls back to the previous day's reading. Login tokens, timestamps, and request signatures are generated in memory; no account credentials or cookies need to be stored in Home Assistant.
 
 ![Home Assistant entities](image-1.png)
 
@@ -27,7 +27,7 @@ The polling interval is configurable during setup and defaults to 60 minutes. Fa
 2. Copy the complete `custom_components/scau_electricity` directory from this repository to `/config/custom_components/scau_electricity`.
 3. Fully restart Home Assistant. Reloading YAML alone does not load a new Python integration.
 4. Open **Settings → Devices & services → Add integration** and search for **SCAU Electricity** or **华南农业大学电费**.
-5. Enter the room name, room ID, polling interval in minutes (default: 60), retry attempts (default: 5), and retry delay in seconds (default: 10). The room fields correspond to the two highlighted values below:
+5. Enter the room name, room ID, polling interval in minutes (default: 60), retry attempts (default: 5), retry delay in seconds (default: 10), and electricity price (default: 0.6259 CNY/kWh). The room fields correspond to the two highlighted values below:
 
    - Room name: `泰山2#301`
    - Room ID: `121931`

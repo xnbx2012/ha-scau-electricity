@@ -6,7 +6,7 @@
       "invalid_room": "房间信息无效或服务未返回读数。"
     },
     "step": {"user": {
-      "data": {"room_id": "房间 ID", "room_name": "房间名称", "scan_interval": "轮询间隔（分钟）", "retry_attempts": "重试次数", "retry_delay": "重试间隔（秒）"},
+      "data": {"room_id": "房间 ID", "room_name": "房间名称", "scan_interval": "轮询间隔（分钟）", "retry_attempts": "重试次数", "retry_delay": "重试间隔（秒）", "electricity_price": "电费单价（元/kWh）"},
       "description": "请输入华南农业大学电费服务使用的房间信息。{error}",
       "title": "添加宿舍电表"
     }}

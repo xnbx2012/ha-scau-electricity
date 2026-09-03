@@ -6,7 +6,7 @@ import hashlib
 import json
 import uuid
 from asyncio import sleep
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, timedelta
 from typing import Any
 from urllib.parse import parse_qsl, unquote
@@ -82,6 +82,15 @@ class ScauElectricityApi:
         self._db_id = db_id
 
     async def async_get_data(self, reading_date: date) -> ElectricityData:
+        """Fetch readings, falling back to the previous meter day at zero."""
+        data = await self._async_get_data_once(reading_date)
+        if data.daily_energy != 0:
+            return data
+
+        previous = await self._async_get_data_once(reading_date - timedelta(days=1))
+        return replace(data, daily_energy=previous.daily_energy)
+
+    async def _async_get_data_once(self, reading_date: date) -> ElectricityData:
         """Fetch and normalize all readings."""
         day = reading_date.isoformat()
         usage_request = {

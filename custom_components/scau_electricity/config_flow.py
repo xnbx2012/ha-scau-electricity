@@ -15,12 +15,14 @@ from .api import ScauApiConnectionError, ScauApiError, ScauElectricityApi
 from .const import (
     CONF_ROOM_ID,
     CONF_ROOM_NAME,
+    CONF_ELECTRICITY_PRICE,
     CONF_RETRY_ATTEMPTS,
     CONF_RETRY_DELAY,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL_MINUTES,
     DEFAULT_RETRY_ATTEMPTS,
     DEFAULT_RETRY_DELAY_SECONDS,
+    DEFAULT_ELECTRICITY_PRICE_YUAN_PER_KWH,
     DOMAIN,
 )
 
@@ -44,6 +46,7 @@ class ScauElectricityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             scan_interval = int(user_input[CONF_SCAN_INTERVAL])
             retry_attempts = int(user_input[CONF_RETRY_ATTEMPTS])
             retry_delay = int(user_input[CONF_RETRY_DELAY])
+            electricity_price = float(user_input[CONF_ELECTRICITY_PRICE])
             await self.async_set_unique_id(room_id)
             self._abort_if_unique_id_configured()
             api = ScauElectricityApi(
@@ -72,6 +75,7 @@ class ScauElectricityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SCAN_INTERVAL: scan_interval,
                         CONF_RETRY_ATTEMPTS: retry_attempts,
                         CONF_RETRY_DELAY: retry_delay,
+                        CONF_ELECTRICITY_PRICE: electricity_price,
                     },
                 )
         values = user_input or {}
@@ -95,6 +99,13 @@ class ScauElectricityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_RETRY_DELAY,
                     default=values.get(CONF_RETRY_DELAY, DEFAULT_RETRY_DELAY_SECONDS),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                vol.Required(
+                    CONF_ELECTRICITY_PRICE,
+                    default=values.get(
+                        CONF_ELECTRICITY_PRICE,
+                        DEFAULT_ELECTRICITY_PRICE_YUAN_PER_KWH,
+                    ),
+                ): vol.All(vol.Coerce(float), vol.Range(min=0)),
             }
         )
         return self.async_show_form(

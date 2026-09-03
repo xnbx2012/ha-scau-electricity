@@ -23,8 +23,9 @@ from .api import ElectricityData
 from .const import (
     CONF_ROOM_ID,
     CONF_ROOM_NAME,
+    CONF_ELECTRICITY_PRICE,
+    DEFAULT_ELECTRICITY_PRICE_YUAN_PER_KWH,
     DOMAIN,
-    ELECTRICITY_PRICE_YUAN_PER_KWH,
 )
 from .coordinator import ScauElectricityCoordinator
 
@@ -104,6 +105,9 @@ class ScauElectricitySensor(
     ) -> None:
         super().__init__(coordinator)
         self.entity_description = description
+        self._electricity_price = entry.data.get(
+            CONF_ELECTRICITY_PRICE, DEFAULT_ELECTRICITY_PRICE_YUAN_PER_KWH
+        )
         room_id = entry.data[CONF_ROOM_ID]
         self._attr_unique_id = f"{room_id}_{description.key}"
         self.entity_id = (
@@ -119,6 +123,8 @@ class ScauElectricitySensor(
     @property
     def native_value(self) -> float:
         """Return the native sensor value."""
+        if self.entity_description.key == "daily_cost":
+            return self.coordinator.data.daily_energy * self._electricity_price
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
